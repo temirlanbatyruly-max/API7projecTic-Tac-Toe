@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Tic-Tac-Toe</title>
+    <style>
+        :root {
+            --bg: #050505;
+            --cell-size: 100px;
+            --color-x: #ff007b;
+            --color-o: #00d4ff;
+            --glass: rgba(255, 255, 255, 0.05);
+        }
+
+        body {
+            background-color: var(--bg);
+            color: white;
+            font-family: 'Outfit', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        h1 {
+            font-weight: 300;
+            letter-spacing: 8px;
+            text-transform: uppercase;
+            margin-bottom: 30px;
+            background: linear-gradient(to right, var(--color-x), var(--color-o));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .status {
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            height: 30px;
+            font-weight: bold;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, var(--cell-size));
+            grid-template-rows: repeat(3, var(--cell-size));
+            gap: 10px;
+            background: var(--glass);
+            padding: 10px;
+            border-radius: 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .cell {
+            width: var(--cell-size);
+            height: var(--cell-size);
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            cursor: pointer;
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .cell:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.02);
+        }
+
+        .cell.x { color: var(--color-x); text-shadow: 0 0 15px var(--color-x); }
+        .cell.o { color: var(--color-o); text-shadow: 0 0 15px var(--color-o); }
+
+        .btn-reset {
+            margin-top: 40px;
+            padding: 12px 30px;
+            background: transparent;
+            border: 1px solid white;
+            color: white;
+            border-radius: 50px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: 0.3s;
+        }
+
+        .btn-reset:hover {
+            background: white;
+            color: black;
+        }
+
+        /* Анимация появления значка */
+        @keyframes pop {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
+        }
+
+        .cell span {
+            animation: pop 0.3s forwards;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Matrix X/O</h1>
+    <div class="status" id="statusText">Ход Крестиков (X)</div>
+
+    <div class="grid" id="field">
+        <div class="cell" data-index="0"></div>
+        <div class="cell" data-index="1"></div>
+        <div class="cell" data-index="2"></div>
+        <div class="cell" data-index="3"></div>
+        <div class="cell" data-index="4"></div>
+        <div class="cell" data-index="5"></div>
+        <div class="cell" data-index="6"></div>
+        <div class="cell" data-index="7"></div>
+        <div class="cell" data-index="8"></div>
+    </div>
+
+    <button class="btn-reset" onclick="restart()">Перезапуск</button>
+
+    <script>
+        const field = document.getElementById('field');
+        const cells = document.querySelectorAll('.cell');
+        const statusText = document.getElementById('statusText');
+        
+        let currentPlayer = "X";
+        let state = ["", "", "", "", "", "", "", "", ""];
+        let active = true;
+
+        const wins = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // Горизонтали
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // Вертикали
+            [0, 4, 8], [2, 4, 6]             // Диагонали
+        ];
+
+        function handleCellClick(e) {
+            const cell = e.target;
+            const idx = cell.getAttribute('data-index');
+
+            if (state[idx] !== "" || !active) return;
+
+            state[idx] = currentPlayer;
+            cell.innerHTML = `<span>${currentPlayer}</span>`;
+            cell.classList.add(currentPlayer.toLowerCase());
+
+            checkResult();
+        }
+
+        function checkResult() {
+            let roundWon = false;
+
+            for (let i = 0; i < wins.length; i++) {
+                const [a, b, c] = wins[i];
+                if (state[a] && state[a] === state[b] && state[a] === state[c]) {
+                    roundWon = true;
+                    break;
+                }
+            }
+
+            if (roundWon) {
+                statusText.innerText = `Победа: ${currentPlayer}!`;
+                statusText.style.color = currentPlayer === "X" ? "var(--color-x)" : "var(--color-o)";
+                active = false;
+                return;
+            }
+
+            if (!state.includes("")) {
+                statusText.innerText = "Ничья!";
+                active = false;
+                return;
+            }
+
+            currentPlayer = currentPlayer === "X" ? "O" : "X";
+            statusText.innerText = `Ход: ${currentPlayer}`;
+        }
+
+        function restart() {
+            currentPlayer = "X";
+            state = ["", "", "", "", "", "", "", "", ""];
+            active = true;
+            statusText.innerText = "Ход Крестиков (X)";
+            statusText.style.color = "white";
+            cells.forEach(cell => {
+                cell.innerText = "";
+                cell.classList.remove('x', 'o');
+            });
+        }
+
+        cells.forEach(cell => cell.addEventListener('click', handleCellClick));
+    </script>
+</body>
+</html>
